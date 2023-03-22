@@ -1,0 +1,97 @@
+customer:
+  name: JanTest
+  sla : 000123
+  ou: OU=MS,OU=ID-SDL,OU=Hosting,DC=d,DC=ethz,DC=ch
+  contact: hackerj
+  ignore: id-sd-storage-nas-core
+
+###
+### AD Group assignments
+###
+
+roles:
+  staff: jha4ea
+  related: hackerj jhatest
+  former-users: schaedlp
+
+adgroups:
+  ID-SDL-MS: cresnik mb huemann heim dali michele rhess ltremmel
+             moussov dawidn magrob hackerj
+  S-ID-OuAdmins: "%staff dali4ea nick4ea mou4ea mah4ea mag4ea
+                 chr4ea max4ea mabea aat4ea tri4ea hvl4ea"
+
+desired_ad_attributes:
+  staff:
+    - DistinguishedName: CN=<USER>,OU=EthUsers,DC=d,DC=ethz,DC=ch
+    - showInAddressBook: CN=ETH-ITS
+    - Office: STB
+    - ou: 02889
+  related:
+    - DistinguishedName: CN=<USER>,OU=EthUsers,DC=d,DC=ethz,DC=ch
+    - telephoneNumber: 41 44 632
+    - Office: STB
+    - ou: 06016
+
+###
+### NAS Shares and desired permissions
+###
+
+# Define share aliases (used for permissions and dfs checks)
+shares:
+  test01: \\nas-nethz-users.d.ethz.ch\share-j-$\jha4ea
+
+# Allow verification of correct dfs redirects
+dfs:
+  test01: \\d\dfs\Users\all\jha4ea
+
+# NAS share permissions
+# <USER> will be handled for any users named in roles
+# http://blogs.technet.com/b/josebda/archive/2010/11/12/how-to-handle-ntfs-folder-permissions-security-descriptors-and-acls-in-powershell.aspx
+permissions:
+  #test01: allRoles{RX}
+  test01\accdoc-playground\Home\<USER>:
+    Roles{staff related}
+    Owner{D\<USER>}
+    Group{D\ID-SDL-MS}
+    Access{
+      "Administrators" ,"FullControl", "ContainerInherit, ObjectInherit", "None", "Allow";
+      "D\S-ID-OuAdmins","Read"       , "ContainerInherit, ObjectInherit", "None", "Allow";
+      "<USER>"         ,"FullControl", "ContainerInherit, ObjectInherit", "None", "Allow"
+    }
+  test01\accdoc-playground\workarea:
+    Owner{D\jha4ea}
+    Group{D\ID-SDL-MS}
+    Access{
+      "Administrators", "FullControl", "ContainerInherit, ObjectInherit", "None", "Allow";
+      "D\S-ID-OuAdmins","FullControl", "ContainerInherit, ObjectInherit", "None", "Allow"
+    }
+
+# Path   : Microsoft.PowerShell.Core\FileSystem::\\nas-nethz-users.d.ethz.ch\share-h-$\hackerj\homepage
+# Owner  : D\hackerj
+# Group  : D\ID-BD-Stud-Webserver
+# Access : D\hackerj Allow  FullControl
+#          CREATOR OWNER Allow  FullControl
+#          D\Domain Admins Allow  FullControl
+#          D\id-sd-storage-nasadmin Allow  FullControl
+#          NT AUTHORITY\SYSTEM Allow  FullControl
+# Audit  :
+# Sddl   : O:S-1-5-21-2025429265-764733703-1417001333-90584G:S-1-5-21-2025429265-
+#          764733703-1417001333-131846D:AI(A;ID;FA;;;S-1-5-21-2025429265-76473370
+#          3-1417001333-90584)(A;OICIIOID;FA;;;CO)(A;OICIID;FA;;;DA)(A;OICIID;FA;
+#          ;;S-1-5-21-2025429265-764733703-1417001333-58216)(A;OICIID;FA;;;SY)
+
+# FileSystemRights  : FullControl
+# AccessControlType : Allow
+# IdentityReference : D\hackerj
+# IsInherited       : True
+# InheritanceFlags  : None
+# PropagationFlags  : None
+
+# FileSystemRights  : FullControl
+# AccessControlType : Allow
+# IdentityReference : CREATOR OWNER
+# IsInherited       : True
+# InheritanceFlags  : ContainerInherit, ObjectInherit
+# PropagationFlags  : InheritOnly
+
+

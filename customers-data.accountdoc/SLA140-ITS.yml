@@ -1,0 +1,112 @@
+#
+# accountdoc customer.yml for ETH-ITS
+# % refer to role users
+# @ refer to adgroups
+# <USER> will be replaced by current user name
+# http://symfony.com/doc/current/components/yaml/yaml_format.html
+#
+
+###
+### BASIC CUSTOMER DATA
+###
+
+customer:
+  name: ETH-ITS
+  sla : 140
+  ou: OU=ITS,OU=kunden,OU=MS,OU=ID-SDL,OU=Hosting,DC=d,DC=ethz,DC=ch
+  contact: felder buchmanc
+  ignore: id-sd-storage-nas-core
+
+###
+### AD Group assignments
+###
+
+roles:
+  head: felder
+  secretary: buchmanc
+  secretary-helpers: kkanthan feldern
+  staff: chelkakd cladere hiwaniec kputyra luriat hackerj
+  admins: chr4ea jha4ea rhe4ea
+  guests: antonkh
+  former-users: thwa gillesb puzici rbrack msager phs4ea
+
+adgroups:
+  ITS-administration: "%head %secretary %secretary-helpers"
+  ITS-users: "%head %secretary %secretary-helpers %staff"
+  ITS-ouadmin: "%admins"
+  ITS-alle: "@ITS-ouadmin @ITS-users"
+
+desired_ad_attributes:
+  guests:
+    - DistinguishedName: CN=<USER>,OU=EthUsers,DC=d,DC=ethz,DC=ch
+    - showInAddressBook: CN=ETH-ITS
+  staff:
+    - DistinguishedName: CN=<USER>,OU=EthUsers,DC=d,DC=ethz,DC=ch
+    - telephoneNumber: 41 44 632
+    - Office: CLV
+    - ou: 02889
+    #- showInAddressBook: CN=ETH-ITS
+  secretary:
+    - DistinguishedName: CN=<USER>,OU=EthUsers,DC=d,DC=ethz,DC=ch
+    - telephoneNumber: 41 44 632
+    - Office: CLV
+    #- showInAddressBook: CN=ETH-ITS
+  secretary-helpers:
+    - DistinguishedName: CN=<USER>,OU=EthUsers,DC=d,DC=ethz,DC=ch
+    - telephoneNumber: 41 44 632
+    - Office: CLV
+    #- showInAddressBook: CN=ETH-ITS
+
+###
+### NAS Shares and desired permissions
+###
+
+# Define share aliases (used for permissions and dfs checks)
+shares:
+  its-primary: \\nas-eth-2.ethz.ch\lfe_its_nas_1
+
+# Allow verification of correct dfs redirects
+dfs:
+  its-primary: \\d\dfs\Groups\lfe-its
+
+# NAS share permissions
+# <USER> will be handled for any users named in roles
+# <USERS-roleName1,roleName2> could be a more flexible approach?
+permissions:
+  its-primary:
+    Owner{D\felder}
+    Group{D\ID-SDL-MS}
+    Access{
+      "Administrators" ,"FullControl", "ContainerInherit, ObjectInherit", "None", "Allow";
+      "D\S-ID-OuAdmins","Read"       , "ContainerInherit, ObjectInherit", "None", "Allow";
+      "ITS-alle"       ,"FullControl", "ContainerInherit, ObjectInherit", "None", "Allow"
+    }
+  its-primary\ETH-ITS Admin Buchmann:
+    Owner{D\felder}
+    Group{D\ID-SDL-MS}
+    Access{
+      "Administrators" ,"FullControl", "ContainerInherit, ObjectInherit", "None", "Allow";
+      "D\S-ID-OuAdmins","Read"       , "ContainerInherit, ObjectInherit", "None", "Allow";
+      "ITS-alle"       ,"FullControl", "ContainerInherit, ObjectInherit", "None", "Allow"
+    }
+    # FIXME: WHY IS THIS REPORTED "green" ...^^ diff is lying...?
+  # user homes
+  its-primary\Users\Home\<USER>:
+    Roles{staff related}
+    Owner{D\<USER>}
+    Group{D\ID-SDL-MS}
+    Access{
+      "Administrators" ,"FullControl", "ContainerInherit, ObjectInherit", "None", "Allow";
+      "D\S-ID-OuAdmins","Read"       , "ContainerInherit, ObjectInherit", "None", "Allow";
+      "<USER>"         ,"FullControl", "ContainerInherit, ObjectInherit", "None", "Allow"
+    }
+  # profiles
+  its-primary\Users\FolderRedirection\<USER>:
+    Roles{staff related}
+    Owner{D\<USER>}
+    Group{D\ID-SDL-MS}
+    Access{
+      "Administrators" ,"FullControl", "ContainerInherit, ObjectInherit", "None", "Allow";
+      "D\S-ID-OuAdmins","Read"       , "ContainerInherit, ObjectInherit", "None", "Allow";
+      "<USER>"         ,"FullControl", "ContainerInherit, ObjectInherit", "None", "Allow"
+    }

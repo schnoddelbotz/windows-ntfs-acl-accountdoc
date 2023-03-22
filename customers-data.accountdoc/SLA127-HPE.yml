@@ -1,0 +1,120 @@
+#
+# accountdoc customer.yml for ITET-HPE
+# % refer to role users
+# @ refer to adgroups
+# <USER> will be replaced by current user name
+# http://symfony.com/doc/current/components/yaml/yaml_format.html
+#
+
+###
+### BASIC CUSTOMER DATA
+###
+
+customer:
+  name: ITET-HPE / Biela
+  sla : 127
+  ou: OU=HPE,OU=kunden,OU=MS,OU=ID-SDL,OU=Hosting,DC=d,DC=ethz,DC=ch
+  contact: biela
+  ignore: id-sd-storage-nas-core
+
+###
+### AD Group assignments
+###
+
+roles:
+  head: jbiela
+  secretary: japerez
+  staff: ajehle ccarsten chdaniel dpeftits emira gerberdo hillersa jaritzm
+         jauchf jburkard ldavid mblume roggt shuaip stmilos wyssj
+  stud: agjukaj andrmue aria dominikf helleral ioannsta jaina jestink kalkoune
+        lorenzk maendlip neumayrd riduank sheorhi
+  formal-accounts: idsla127 hpewiki hpescanner gptest richtech
+  id-support: mou4ea ltr4ea mbe4ea jha4ea djn4ea mag4ea
+  former-users: phs4ea
+
+adgroups:
+  ITET-HPE-ouadmins: "mb idsla127 %id-support"
+  ITET-HPE-NASadmins: "mbe4ea"
+  ITET-HPE-HPE-board: "%head %staff %secretary"
+  ITET-HPE-users: "%head %secretary %staff %stud %id-support %formal-accounts"
+  ITET-HPE-institut-users: "%head %secretary %staff"
+  ITET-HPE-NAS-Lehre-Editor: "%head %secretary"
+  ITET-HPE-Lehre-ET_I-hassis: "%head"
+
+desired_ad_attributes:
+  guests:
+    - DistinguishedName: CN=<USER>,OU=EthUsers,DC=d,DC=ethz,DC=ch
+    - showInAddressBook: CN=ETH-ITS
+  staff:
+    - DistinguishedName: CN=<USER>,OU=users,OU=ITET-HPE,OU=Hosting,DC=d,DC=ethz,DC=ch
+    - telephoneNumber: 41 44 63
+    - Office: ETL
+    - ou: 03889
+    #- showInAddressBook: CN=ETH-ITS
+  secretary:
+    - DistinguishedName: CN=<USER>,OU=users,OU=ITET-HPE,OU=Hosting,DC=d,DC=ethz,DC=ch
+    - telephoneNumber: 41 44 63
+    - Office: ETL
+    #- showInAddressBook: CN=ETH-ITS
+
+###
+### NAS Shares and desired permissions
+###
+
+# Define share aliases (used for permissions and dfs checks)
+shares:
+  hpe1: \\nas-itet.ethz.ch\share-hpe-biela-1-$
+
+# Allow verification of correct dfs redirects
+dfs:
+  hpe1: \\d\dfs\Groups\itet\hpe\biela
+
+# NAS share permissions
+# <USER> will be handled for any users named in roles
+# it should be possible to reference another share access settings for 1:1 use
+permissions:
+  hpe1: Question{Where Defined}
+  #
+  hpe1\Administration: fullControl{%head,%secretary}
+  hpe1\Intern: fullControl{%head}
+  #
+  hpe1\Staff\<USER>:
+    Roles{staff head secretary}
+    Owner{D\<USER>}
+    Group{D\ID-SDL-MS}
+    Access{
+      "Administrators" ,"FullControl", "ContainerInherit, ObjectInherit", "None", "Allow";
+      "D\S-ID-OuAdmins","Read"       , "ContainerInherit, ObjectInherit", "None", "Allow";
+      "<USER>"         ,"FullControl", "ContainerInherit, ObjectInherit", "None", "Allow"
+    }
+  hpe1\Stud\<USER>:
+    Roles{stud}
+    Owner{D\<USER>}
+    Group{D\ID-SDL-MS}
+    Access{
+      "Administrators" ,"FullControl", "ContainerInherit, ObjectInherit", "None", "Allow";
+      "D\S-ID-OuAdmins","Read"       , "ContainerInherit, ObjectInherit", "None", "Allow";
+      "<USER>"         ,"FullControl", "ContainerInherit, ObjectInherit", "None", "Allow"
+    }
+  hpe1\Guest\<USER>:
+    Roles{guest}
+    Owner{D\<USER>}
+    Group{D\ID-SDL-MS}
+    Access{
+      "Administrators" ,"FullControl", "ContainerInherit, ObjectInherit", "None", "Allow";
+      "D\S-ID-OuAdmins","Read"       , "ContainerInherit, ObjectInherit", "None", "Allow";
+      "<USER>"         ,"FullControl", "ContainerInherit, ObjectInherit", "None", "Allow"
+    }
+  hpe1\Profile\<USER>:
+    Roles{staff guest head secretary}
+    Owner{D\<USER>}
+    Group{D\ID-SDL-MS}
+    Access{
+      "Administrators" ,"FullControl", "ContainerInherit, ObjectInherit", "None", "Allow";
+      "D\S-ID-OuAdmins","Read"       , "ContainerInherit, ObjectInherit", "None", "Allow";
+      "<USER>"         ,"FullControl", "ContainerInherit, ObjectInherit", "None", "Allow"
+    }
+  # only projects below
+  hpe1\Project\Acoustic_Noise_ECPE: template{project,@ITET-HPE-Acoustic_Noise_ECPE}
+  hpe1\Project\Alstom_Generator_Test: template{project,@ITET-HPE-Alstom_Generator_Test}
+  # 13 more projects to come...
